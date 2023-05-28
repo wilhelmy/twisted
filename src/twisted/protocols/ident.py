@@ -70,7 +70,7 @@ class IdentServer(basic.LineOnlyReceiver):
     """
 
     def lineReceived(self, line):
-        parts = line.split(",")
+        parts = line.decode("utf-8").split(",")
         if len(parts) != 2:
             self.invalidQuery()
         else:
@@ -108,16 +108,16 @@ class IdentServer(basic.LineOnlyReceiver):
 
     def _cbLookup(self, result, sport, cport):
         (sysName, userId) = result
-        self.sendLine("%d, %d : USERID : %s : %s" % (sport, cport, sysName, userId))
+        self.sendLine(("%d, %d : USERID : %s : %s" % (sport, cport, sysName, userId)).encode("utf-8"))
 
     def _ebLookup(self, failure, sport, cport):
         if failure.check(IdentError):
-            self.sendLine("%d, %d : ERROR : %s" % (sport, cport, failure.value))
+            self.sendLine(("%d, %d : ERROR : %s" % (sport, cport, failure.value)).encode("utf-8"))
         else:
             log.err(failure)
-            self.sendLine(
+            self.sendLine((
                 "%d, %d : ERROR : %s" % (sport, cport, IdentError(failure.value))
-            )
+            ).encode("utf-8"))
 
     def lookup(self, serverAddress, clientAddress):
         """
@@ -180,7 +180,7 @@ class ProcServerMixin:
         return addr, port
 
     def parseLine(self, line):
-        parts = line.strip().split()
+        parts = line.decode("utf-8").strip().split()
         localAddr, localPort = self.unpackAddress(parts[1])
         remoteAddr, remotePort = self.unpackAddress(parts[2])
         uid = int(parts[7])
@@ -228,7 +228,7 @@ class IdentClient(basic.LineOnlyReceiver):
         self.queries = []
 
     def parseResponse(self, deferred, line):
-        parts = line.split(":", 2)
+        parts = line.decode("utf-8").split(":", 2)
         if len(parts) != 3:
             deferred.errback(IdentError(line))
         else:
